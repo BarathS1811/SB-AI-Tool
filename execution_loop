@@ -1,0 +1,44 @@
+
+import time
+import pandas as pd
+from strategies.cpr_supertrend import strategy_cpr_supertrend
+from strategies.short_straddle import strategy_short_straddle
+from strategies.breakout import strategy_breakout
+from strategies.oi_price_action import strategy_oi_price_action
+from api.zerodha_executor import place_order
+from sl_tp_monitor import add_position
+
+def fetch_dummy_data():
+    df = pd.DataFrame({
+        'Open': [19600], 'High': [19650], 'Low': [19550], 'Close': [19640],
+        'CPR_Top': [19580], 'Supertrend': ['Buy'], 'IV': [17.2]
+    })
+    oi_df = pd.DataFrame({'OI': [12000, 13200]})
+    return df, oi_df
+
+def run_strategy_loop(strategy_name):
+    while True:
+        df, oi_df = fetch_dummy_data()
+
+        if strategy_name == "CPR + Supertrend":
+            result = strategy_cpr_supertrend(df)
+        elif strategy_name == "Short Straddle":
+            result = strategy_short_straddle(df, "NIFTY25JUN19600CE", "NIFTY25JUN19600PE")
+        elif strategy_name == "Breakout":
+            result = strategy_breakout(df)
+        elif strategy_name == "OI + PA":
+            result = strategy_oi_price_action(df, oi_df)
+        else:
+            print("Invalid strategy")
+            return
+
+        print(f"[{time.strftime('%H:%M:%S')}] Strategy Result: {result}")
+
+        if result["signal"] == "BUY":
+            place_order(result["instrument"], "BUY")
+            add_position(result["instrument"], 19640, result["stop_loss"], result["target"])
+        elif result["signal"] == "SELL_STRADDLE":
+            for sym in result["instrument"]:
+                place_order(sym, "SELL")
+
+        time.sleep(60)

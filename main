@@ -1,0 +1,25 @@
+
+import streamlit as st
+from sl_tp_monitor import monitor_positions
+
+st.set_page_config(page_title="Options Auto Trader", layout="wide")
+st.title("🧠 AI Options Auto Trading Tool")
+
+st.sidebar.header("Settings")
+enable_trade = st.sidebar.checkbox("Enable Trading")
+selected_strategy = st.sidebar.selectbox("Choose Strategy", ["CPR + Supertrend", "Short Straddle", "Breakout", "OI + PA"])
+emergency_stop = st.sidebar.button("🛑 Emergency STOP", key="stop_button")
+
+if emergency_stop:
+    st.warning("⚠️ Emergency Stop Triggered - Disabling Trading")
+    enable_trade = False
+
+st.subheader("📊 Trade Dashboard")
+st.metric("Selected Strategy", selected_strategy)
+st.metric("Trade Signal", "BUY CE")
+
+st.text_area("Live Logs", value="[09:30] Signal Triggered: BUY CE - NIFTY25100", height=200)
+
+st.line_chart([19500, 19520, 19560, 19540, 19600, 19620, 19650])
+
+monitor_positions()

@@ -1,0 +1,11 @@
+
+def strategy_cpr_supertrend(df):
+    latest = df.iloc[-1]
+    if latest['Close'] > latest['CPR_Top'] and latest['Supertrend'] == 'Buy':
+        return {
+            "signal": "BUY",
+            "instrument": "NIFTY25JUN25100CE",
+            "target": latest['Close'] + 30,
+            "stop_loss": latest['Close'] - 15
+        }
+    return {"signal": "HOLD"}

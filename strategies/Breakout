@@ -1,0 +1,10 @@
+
+def strategy_breakout(df):
+    latest = df.iloc[-1]
+    high = df['High'].max()
+    low = df['Low'].min()
+    if latest['Close'] > high:
+        return {"signal": "BUY", "instrument": "ATM_CE"}
+    elif latest['Close'] < low:
+        return {"signal": "BUY", "instrument": "ATM_PE"}
+    return {"signal": "HOLD"}

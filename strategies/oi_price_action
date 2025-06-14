@@ -1,0 +1,12 @@
+
+def strategy_oi_price_action(df, oi_df):
+    latest = df.iloc[-1]
+    oi_change = oi_df['OI'].pct_change().iloc[-1]
+    if oi_change > 0.1 and latest['Close'] > latest['Open']:
+        return {
+            "signal": "BUY",
+            "instrument": "OTM_CE",
+            "target": latest['Close'] + 25,
+            "stop_loss": latest['Close'] - 10
+        }
+    return {"signal": "HOLD"}
