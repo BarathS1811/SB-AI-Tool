@@ -1,0 +1,58 @@
+
+import pandas as pd
+from nsepython import nse_optionchain_scrapper
+
+# Optional: import kiteconnect if Zerodha is configured
+try:
+    from api.zerodha_executor import kite
+    zerodha_available = True
+except ImportError:
+    zerodha_available = False
+
+def fetch_from_nse():
+    try:
+        oc = nse_optionchain_scrapper("NIFTY")
+        spot_price = oc["records"]["underlyingValue"]
+        df = pd.DataFrame({
+            'Open': [spot_price - 30],
+            'High': [spot_price + 20],
+            'Low': [spot_price - 50],
+            'Close': [spot_price],
+            'CPR_Top': [spot_price - 15],
+            'Supertrend': ['Buy'],
+            'IV': [oc['records']['data'][0]['CE']['impliedVolatility']]
+        })
+        oi_df = pd.DataFrame({'OI': [d['CE']['openInterest'] for d in oc['records']['data'][:2]]})
+        return df, oi_df
+    except Exception as e:
+        print(f"⚠️ NSE data error: {e}")
+        return None, None
+
+def fetch_from_zerodha(symbol="NIFTY 50"):
+    try:
+        if not zerodha_available:
+            raise Exception("Zerodha not available")
+
+        quote = kite.ltp(f"NSE:{symbol}")
+        spot_price = quote[f"NSE:{symbol}"]['last_price']
+        df = pd.DataFrame({
+            'Open': [spot_price - 20],
+            'High': [spot_price + 15],
+            'Low': [spot_price - 25],
+            'Close': [spot_price],
+            'CPR_Top': [spot_price - 10],
+            'Supertrend': ['Buy'],
+            'IV': [18.5]
+        })
+        oi_df = pd.DataFrame({'OI': [11000, 12500]})
+        return df, oi_df
+    except Exception as e:
+        print(f"⚠️ Zerodha data error: {e}")
+        return None, None
+
+def fetch_live_data(preferred="zerodha"):
+    if preferred == "zerodha":
+        df, oi_df = fetch_from_zerodha()
+        if df is not None:
+            return df, oi_df
+    return fetch_from_nse()

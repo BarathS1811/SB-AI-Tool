@@ -1,0 +1,29 @@
+
+from kiteconnect import KiteConnect
+
+kite = KiteConnect(api_key="your_api_key")
+
+def login_url():
+    return kite.login_url()
+
+def generate_session(request_token, api_secret):
+    data = kite.generate_session(request_token, api_secret=api_secret)
+    kite.set_access_token(data["access_token"])
+    return data["access_token"]
+
+def place_order(symbol, transaction_type, quantity=50, order_type="MARKET"):
+    try:
+        order_id = kite.place_order(
+            tradingsymbol=symbol,
+            exchange="NFO",
+            transaction_type=transaction_type,
+            quantity=quantity,
+            order_type=order_type,
+            product="MIS",
+            variety="regular"
+        )
+        print(f"✅ Order Placed: {symbol} - {transaction_type}")
+        return order_id
+    except Exception as e:
+        print(f"❌ Order Error: {e}")
+        return None

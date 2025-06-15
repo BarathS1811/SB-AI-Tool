@@ -1,0 +1,11 @@
+
+def strategy_short_straddle(df, atm_ce, atm_pe):
+    iv = df['IV'].iloc[-1]
+    price_change = df['Close'].pct_change().iloc[-1]
+    if iv < 18 and abs(price_change) < 0.002:
+        return {
+            "signal": "SELL_STRADDLE",
+            "instrument": [atm_ce, atm_pe],
+            "stop_loss": 0.25
+        }
+    return {"signal": "HOLD"}

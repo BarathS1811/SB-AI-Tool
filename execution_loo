@@ -1,0 +1,41 @@
+
+import time
+from market_data import fetch_live_data
+from strategies.cpr_supertrend import strategy_cpr_supertrend
+from strategies.short_straddle import strategy_short_straddle
+from strategies.breakout import strategy_breakout
+from strategies.oi_price_action import strategy_oi_price_action
+from api.zerodha_executor import place_order
+from sl_tp_monitor import add_position
+
+def run_strategy_loop(strategy_name):
+    while True:
+        df, oi_df = fetch_live_data(preferred="zerodha")  # fallback to NSE if Zerodha fails
+
+        if df is None or oi_df is None:
+            print("❌ Data fetch failed. Retrying...")
+            time.sleep(60)
+            continue
+
+        if strategy_name == "CPR + Supertrend":
+            result = strategy_cpr_supertrend(df)
+        elif strategy_name == "Short Straddle":
+            result = strategy_short_straddle(df, "NIFTY25JUN19600CE", "NIFTY25JUN19600PE")
+        elif strategy_name == "Breakout":
+            result = strategy_breakout(df)
+        elif strategy_name == "OI + PA":
+            result = strategy_oi_price_action(df, oi_df)
+        else:
+            print("Invalid strategy")
+            return
+
+        print(f"[{time.strftime('%H:%M:%S')}] Strategy Result: {result}")
+
+        if result["signal"] == "BUY":
+            place_order(result["instrument"], "BUY")
+            add_position(result["instrument"], df['Close'].iloc[-1], result["stop_loss"], result["target"])
+        elif result["signal"] == "SELL_STRADDLE":
+            for sym in result["instrument"]:
+                place_order(sym, "SELL")
+
+        time.sleep(60)

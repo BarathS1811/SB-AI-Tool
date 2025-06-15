@@ -1,0 +1,25 @@
+
+import time
+import pandas as pd
+import streamlit as st
+from api.zerodha_executor import place_order
+
+open_positions = {}
+
+def monitor_positions():
+    st.subheader("📍 Position Monitor with SL/TP")
+    for symbol, trade in list(open_positions.items()):
+        current_price = trade['entry']  # Replace with actual price fetch
+        st.write(f"{symbol} | Entry: {trade['entry']} | SL: {trade['sl']} | TP: {trade['tp']} | Now: {current_price}")
+
+        if current_price <= trade['sl']:
+            place_order(symbol, "SELL")
+            st.error(f"🛑 Stop Loss Hit: {symbol}")
+            del open_positions[symbol]
+        elif current_price >= trade['tp']:
+            place_order(symbol, "SELL")
+            st.success(f"🎯 Target Hit: {symbol}")
+            del open_positions[symbol]
+
+def add_position(symbol, entry, sl, tp):
+    open_positions[symbol] = {"entry": entry, "sl": sl, "tp": tp}
